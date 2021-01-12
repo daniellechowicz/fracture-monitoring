@@ -31,43 +31,116 @@ class PointTracker:
         
         # Initial frames (needed for further processing)
         _, self.frame = self.cap.read()
-        self.oldGray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray1 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray2 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray3 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray4 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         
         cv2.namedWindow(self.frameName)
         cv2.setMouseCallback(self.frameName, self.selectPoint)
         
-        # These variables will be changed whenever click event is present
-        self.point = ()
-        self.pointSelected = False
-        self.oldPoints = np.array([[]])
-        
+        # Reset the points
+        self.resetPoints()
+
         # Threading (in order to synchronize multiple videos)
-        self.thread = Thread(target=self.start, args=())
-        self.thread.daemon = True
-        self.thread.start()
+        # self.thread = Thread(target=self.start, args=())
+        # self.thread.daemon = True
+        # self.thread.start()
         
+    def resetPoints(self):
+        # Based on this variable, dots will be marked
+        # e.g. when counter is set to 0, the first dot will be marked
+        self.counter = 0
+
+        # Dot no. 1
+        self.point1 = ()
+        self.oldPoints1 = np.array([[]])
+        # Dot no. 2
+        self.point2 = ()
+        self.oldPoints2 = np.array([[]])
+        # Dot no. 3
+        self.point3 = ()
+        self.oldPoints3 = np.array([[]])
+        # Dot no. 4
+        self.point4 = ()
+        self.oldPoints4 = np.array([[]])
+
     def selectPoint(self, event, x, y, flags, params):
         # global point, point_selected, old_points
         if event == cv2.EVENT_LBUTTONDOWN:
-            self.point = (x, y)
-            self.pointSelected = True
-            self.oldPoints = np.array([[x, y]], dtype=np.float32)
-      
+            # Update counter
+            self.counter += 1
+
+            if self.counter == 1:
+                self.point1 = (x, y)
+                self.oldPoints1 = np.array([[x, y]], dtype=np.float32)
+            elif self.counter == 2:
+                self.point2 = (x, y)
+                self.oldPoints2 = np.array([[x, y]], dtype=np.float32)
+            elif self.counter == 3:
+                self.point3 = (x, y)
+                self.oldPoints3 = np.array([[x, y]], dtype=np.float32)
+            elif self.counter == 4:
+                self.point4 = (x, y)
+                self.oldPoints4 = np.array([[x, y]], dtype=np.float32)
+            else:
+                self.resetPoints()
+
+    def drawPoint(self, number, frame, grayFrame):
+        colours = {"red": (255, 0, 0), "green": (0, 255, 0), "blue": (0, 0, 255), "orange": (255, 215, 0)} 
+        circleDiameter = -1
+        lineLength = 5
+        thickness = 1
+
+        if number == 1:
+            newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray1, grayFrame, self.oldPoints1, None, **self.lk_params)
+            self.oldGray1 = grayFrame.copy()
+            self.oldPoints1 = newPoints
+    
+            x, y = newPoints.ravel()
+            cv2.circle(frame, (x, y), 1, colours["red"], circleDiameter)
+            cv2.line(frame, (int(x-lineLength), int(y)), (int(x+lineLength), int(y)), colours["red"], thickness)
+            cv2.line(frame, (int(x), int(y-lineLength)), (int(x), int(y+lineLength)), colours["red"], thickness)
+        
+        if number == 2:
+            newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray2, grayFrame, self.oldPoints2, None, **self.lk_params)
+            self.oldGray2 = grayFrame.copy()
+            self.oldPoints2 = newPoints
+    
+            x, y = newPoints.ravel()
+            cv2.circle(frame, (x, y), 1, colours["green"], circleDiameter)
+            cv2.line(frame, (int(x-lineLength), int(y)), (int(x+lineLength), int(y)), colours["green"], thickness)
+            cv2.line(frame, (int(x), int(y-lineLength)), (int(x), int(y+lineLength)), colours["green"], thickness)
+
+        if number == 3:
+            newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray3, grayFrame, self.oldPoints3, None, **self.lk_params)
+            self.oldGray3 = grayFrame.copy()
+            self.oldPoints3 = newPoints
+    
+            x, y = newPoints.ravel()
+            cv2.circle(frame, (x, y), 1, colours["blue"], circleDiameter)
+            cv2.line(frame, (int(x-lineLength), int(y)), (int(x+lineLength), int(y)), colours["blue"], thickness)
+            cv2.line(frame, (int(x), int(y-lineLength)), (int(x), int(y+lineLength)), colours["blue"], thickness)
+
+        if number == 4:
+            newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray4, grayFrame, self.oldPoints4, None, **self.lk_params)
+            self.oldGray4 = grayFrame.copy()
+            self.oldPoints4 = newPoints
+    
+            x, y = newPoints.ravel()
+            cv2.circle(frame, (x, y), 1, colours["orange"], circleDiameter)
+            cv2.line(frame, (int(x-lineLength), int(y)), (int(x+lineLength), int(y)), colours["orange"], thickness)
+            cv2.line(frame, (int(x), int(y-lineLength)), (int(x), int(y+lineLength)), colours["orange"], thickness)
+
     def start(self):
         while True:
             _, frame = self.cap.read()
             grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-            if self.pointSelected is True:
-                cv2.circle(frame, self.point, 5, (0, 0, 255), 1)
-        
-                newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray, grayFrame, self.oldPoints, None, **self.lk_params)
-                self.oldGray = grayFrame.copy()
-                self.oldPoints = newPoints
-        
-                x, y = newPoints.ravel()
-                cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
-        
+
+            # Iterate through the points (based on the counter value)
+            for i in range(0, self.counter):
+                self.drawPoint(i+1, frame, grayFrame)
+
             cv2.imshow(self.frameName, frame)
             sleep(0.1)
             key = cv2.waitKey(1)
@@ -81,5 +154,5 @@ if __name__ == "__main__":
     path1 = os.path.join(ROOT, FILENAME1)
     path2 = os.path.join(ROOT, FILENAME2)
 
-    pt1 = PointTracker(path1, "f1")
-    pt2 = PointTracker(path2, "f2")
+    pt1 = PointTracker(path1, "f1").start()
+    # pt2 = PointTracker(path2, "f2")

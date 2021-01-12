@@ -18,15 +18,14 @@ class Appli(QtWidgets.QMainWindow):
         self.setWindowIcon(icon)
 
         # When "Import video path" button clicked, execute the following:
-        self.pushButton_1.clicked.connect(self.directoryDialog)
-
-    def directoryDialog(self, dir=None):
+        self.pushButton_1.clicked.connect(self.videoPathDialog)
+        
+    def videoPathDialog(self, dir=None):
         if dir is None:
             dir = "./"
 
-        file = str(QtWidgets.QFileDialog.getOpenFileName(self, "Import video path...", dir))
-        print(file)
-        
+        self.videoPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import video path...", str(dir))
+                
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = Appli()
