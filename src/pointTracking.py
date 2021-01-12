@@ -59,14 +59,14 @@ class PointTracker:
             grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
             if self.pointSelected is True:
-                cv2.circle(frame, self.point, 5, (0, 0, 255), 2)
+                cv2.circle(frame, self.point, 5, (0, 0, 255), 1)
         
                 newPoints, status, error = cv2.calcOpticalFlowPyrLK(self.oldGray, grayFrame, self.oldPoints, None, **self.lk_params)
                 self.oldGray = grayFrame.copy()
                 self.oldPoints = newPoints
         
                 x, y = newPoints.ravel()
-                cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
+                cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
         
             cv2.imshow(self.frameName, frame)
             sleep(0.1)
