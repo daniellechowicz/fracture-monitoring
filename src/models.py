@@ -177,12 +177,14 @@ class Video:
                 if cv2.waitKey(20) & 0xFF == 27:
                     break
             else:
-                break
-            
+                break   
         cv2.destroyAllWindows()
 
-        p1, p2, p3, p4 = self.getPoints()
-        self.setPoints(p1, p2, p3, p4)
+        if self.getPoints() == None:
+            pass
+        else:
+            p1, p2, p3, p4 = self.getPoints()
+            self.setPoints(p1, p2, p3, p4)
 
     def getFrame(self):
         ret, frame = self.cap.read()
@@ -194,6 +196,3 @@ class Video:
                 self.drawPoint(i+1, frame, grayFrame)
 
         return ret, frame
-
-if __name__ == "__main__":
-    main()

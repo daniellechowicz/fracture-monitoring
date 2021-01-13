@@ -73,22 +73,27 @@ class UserInterface(QtWidgets.QMainWindow):
     def markPoints(self):
         self.video = Video(self.videoPath, "Initial frame")
         self.video.markPoints()
-        self.p1, self.p2, self.p3, self.p4 = self.video.getPoints()
 
-        # Disable "Mark points" button
-        # Enable "Reset" and "Start" buttons
-        self.pushButton_3.setEnabled(False)
-        self.pushButton_4.setEnabled(True)
-        self.pushButton_5.setEnabled(True)
+        if self.video.getPoints() == None:
+            # Show a message box
+            self.showMessageBox(text="No points were marked - please try again")
+        else:
+            self.p1, self.p2, self.p3, self.p4 = self.video.getPoints()
 
-        # Show a message box
-        self.showMessageBox(text="Points have been saved",
-            altText=None,
-            dtlText="P1: {}\nP2: {}\nP3: {}\nP4: {}".format(self.p1, 
-                                                            self.p2, 
-                                                            self.p3, 
-                                                            self.p4))
-        
+            # Disable "Mark points" button
+            # Enable "Reset" and "Start" buttons
+            self.pushButton_3.setEnabled(False)
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_5.setEnabled(True)
+
+            # Show a message box
+            self.showMessageBox(text="Points have been saved",
+                altText=None,
+                dtlText="P1: {}\nP2: {}\nP3: {}\nP4: {}".format(self.p1, 
+                                                                self.p2, 
+                                                                self.p3, 
+                                                                self.p4))
+            
     def reset(self):
         # Disable "Mark points", "Reset", "Start" and "Stop" buttons
         # Enable "Import video path" button
