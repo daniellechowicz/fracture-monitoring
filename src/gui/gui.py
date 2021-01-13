@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5 import uic
 import ctypes
 import cv2
+import numpy as np
 import sys
 import time
 
@@ -45,6 +46,17 @@ class UserInterface(QtWidgets.QMainWindow):
         self.evt = eventQMouseEvent.button()
         print(self.evt)
 
+    def mouseMoveEvent(self, eventQMouseEvent):
+        self.x, self.y = eventQMouseEvent.x(), eventQMouseEvent.y()
+        cvImg = np.zeros((900,900), dtype=np.uint8)
+        cv2.circle(cvImg, (449,449), 100, 255, -1)
+        cv2.putText(cvImg, "x at {}, y at {}".format(self.x, self.y), (375,455), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
+        height, width = cvImg.shape
+        bytearr = cvImg.data
+        qImg = QtGui.QImage(bytearr, width, height, QtGui.QImage.Format_Indexed8)
+        # self.setPixmap(QtGui.QPixmap.fromImage(qImg))
+        self.label_3.setPixmap(QtGui.QPixmap.fromImage(qImg))
+    
     def videoPathDialog(self, dir=None):
         if dir is None:
             dir = "./"
@@ -72,7 +84,7 @@ class UserInterface(QtWidgets.QMainWindow):
             h, w, ch = rgbImage.shape
             bytesPerLine = ch * w
             convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
-            p = convertToQtFormat.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+            p = convertToQtFormat.scaled(668, 348)#, QtCore.Qt.KeepAspectRatio)
             self.label_2.setPixmap(QtGui.QPixmap.fromImage(p))
             
             # Change buttons' states accordingly
