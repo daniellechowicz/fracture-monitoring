@@ -158,11 +158,14 @@ class Video:
         # in order to count the number of points marked and block the drawing function when the "getFrameCounter" exceeds 4)
         self.getFrameCounter = 0
         while True:
-            if self.getFrameCounter <= 4:
+            if self.getFrameCounter < 4:
                 self.drawPoint(self.getFrameCounter, frame, grayFrame)
-            cv2.imshow(self.frameName, frame)
-            if cv2.waitKey(20) & 0xFF == 27:
+                cv2.imshow(self.frameName, frame)
+                if cv2.waitKey(20) & 0xFF == 27:
+                    break
+            else:
                 break
+            
         cv2.destroyAllWindows()
 
         p1, p2, p3, p4 = self.getPoints()
@@ -189,7 +192,6 @@ def main():
         key = cv2.waitKey(1)
         if key == 27:
             break
-        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

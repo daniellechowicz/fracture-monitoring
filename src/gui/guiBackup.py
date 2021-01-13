@@ -3,6 +3,7 @@ from PyQt5 import uic
 
 from models import Video
 
+import ctypes
 import cv2
 import numpy as np
 import os
@@ -29,16 +30,32 @@ class UserInterface(QtWidgets.QMainWindow):
         icon.addPixmap(QtGui.QPixmap("icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
 
-        # Buttons' callbacks
-        self.pushButton_1.clicked.connect(self.videoPathDialog)
-        self.pushButton_3.clicked.connect(self.markPoints)
-        self.pushButton_4.clicked.connect(self.reset)
+        # To get mouse events, I need to set mouse tracking functionality to True
+        self.setMouseTracking(True)
 
-        # Disable "Mark points", "Reset", "Start" and "Stop" buttons
+        # When "Import video path" button clicked, execute the following:
+        # self.pushButton_1.clicked.connect(self.videoPathDialog)
+        self.pushButton_1.clicked.connect(self.videoPathDialog)
+        self.pushButton_2.clicked.connect(self.markPoints)
+        self.pushButton_4.clicked.connect(self.reset)
+        self.pushButton_5.clicked.connect(self.videoStart)
+
+        # Disable "Import frames button" - one cannot upload frames if no path was given
+        self.pushButton_2.setEnabled(False)
         self.pushButton_3.setEnabled(False)
         self.pushButton_4.setEnabled(False)
         self.pushButton_5.setEnabled(False)
-        self.pushButton_6.setEnabled(False)
+
+    # This applies for threads
+    def videoStart(self):
+        th = Thread(self)
+        th.changePixmap.connect(self.setImage)
+        th.start()
+        self.show()
+
+    def mousePressEvent(self, eventQMouseEvent):
+        self.evt = eventQMouseEvent.button()
+        # print(self.evt)
     
     def showMessageBox(self, text, altText=None, dtlText=None):
         msg = QtWidgets.QMessageBox()
@@ -62,16 +79,11 @@ class UserInterface(QtWidgets.QMainWindow):
         self.videoPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import video path...", str(dir))
 
         if self.videoPath == "":
-            # Show a message box
-            self.showMessageBox(text="Incorrect path was given - please try again")
+            ctypes.windll.user32.MessageBoxW(0, "Incorrect path was given - please try again", "Warning", 0)
         else:
-            # Disable "Import video path" button
-            # Enable "Mark points button"
+            # Disable the button
             self.pushButton_1.setEnabled(False)
-            self.pushButton_3.setEnabled(True)
-
-    def importData(self):
-        pass
+            self.pushButton_2.setEnabled(True)
 
     def markPoints(self):
         self.video = Video(self.videoPath, "Initial frame")
@@ -88,7 +100,28 @@ class UserInterface(QtWidgets.QMainWindow):
         self.showMessageBox(text="Points have been saved",
             altText=None,
             dtlText="P1: {}\nP2: {}\nP3: {}\nP4: {}".format(p1, p2, p3, p4))
+
+    # This applies for threads                
+    @QtCore.pyqtSlot(QtGui.QImage)
+    def setImage(self, image):
+        self.label_2.setPixmap(QtGui.QPixmap.fromImage(image))
+        self.label_3.setPixmap(QtGui.QPixmap.fromImage(image))
         
+    def getFrame(self):
+        cap = cv2.VideoCapture(self.videoPath)
+        ret, frame = cap.read()
+        if ret:
+            rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = rgbImage.shape
+            bytesPerLine = ch * w
+            convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
+            p = convertToQtFormat.scaled(668, 348)#, QtCore.Qt.KeepAspectRatio)
+            self.label_2.setPixmap(QtGui.QPixmap.fromImage(p))
+            
+            # Change buttons' states accordingly
+            self.pushButton_2.setEnabled(False)
+            self.pushButton_4.setEnabled(True)
+
     def reset(self):
         # Change buttons' states accordingly
         self.pushButton_1.setEnabled(True)
@@ -100,6 +133,21 @@ class UserInterface(QtWidgets.QMainWindow):
         
         # Clear video's path
         self.videoPath = ""
+
+
+# This applies for threads
+class Thread(QtCore.QThread):
+    changePixmap = QtCore.pyqtSignal(QtGui.QImage)
+
+    def run(self):
+        while True:
+            frame = self.video.getFrame()
+            rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = rgbImage.shape
+            bytesPerLine = ch * w
+            convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
+            p = convertToQtFormat.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+            self.changePixmap.emit(p)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
