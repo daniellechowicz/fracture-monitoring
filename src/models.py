@@ -17,7 +17,6 @@ ROOT = "F:\\02 Work\\07 Babu\\PRF\\Videos\\PRF0.1"
 FILENAME1 = "testVideo1.mp4"
 FILENAME2 = "testVideo2.mp4"
 
-
 class Video:
 
     def __init__(self, path, frameName):
@@ -26,15 +25,14 @@ class Video:
         self.setup()
 
     def setup(self):
-        self.cap = cv2.VideoCapture(self.path)
-        
+        # Open video capture
+        self.open()
+
         # Lucas-Kanade method's parameters
         self.lk_params = dict(winSize = (15, 15),
                               maxLevel = 4,
                               criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
     
-        # Initial frames (needed for further processing)
-        _, self.frame = self.cap.read()
         self.oldGray1 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         self.oldGray2 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         self.oldGray3 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
@@ -45,6 +43,11 @@ class Video:
         
         # Reset the points
         self.resetPoints()
+
+    def open(self):
+        self.cap = cv2.VideoCapture(self.path)
+        # Initial frames (needed for further processing)
+        _, self.frame = self.cap.read()
 
     def getPoints(self):
         if self.point1 == () and self.point2 == () and self.point3 == () and self.point4 == ():
@@ -58,9 +61,19 @@ class Video:
         self.point3 = p3
         self.point4 = p4
 
+        self.oldPoints1 = np.array([[p1[0], p1[1]]], dtype=np.float32)
+        self.oldPoints2 = np.array([[p2[0], p2[1]]], dtype=np.float32)
+        self.oldPoints3 = np.array([[p3[0], p3[1]]], dtype=np.float32)
+        self.oldPoints4 = np.array([[p4[0], p4[1]]], dtype=np.float32)
+
+        self.oldGray1 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray2 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray3 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        self.oldGray4 = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        
     def resetPoints(self):
         self.counter = 0
-
+    
         # Point no. 1
         self.point1 = ()
         self.oldPoints1 = np.array([[]])
@@ -158,38 +171,29 @@ class Video:
         # in order to count the number of points marked and block the drawing function when the "getFrameCounter" exceeds 4)
         self.getFrameCounter = 0
         while True:
-            if self.getFrameCounter <= 4:
+            if self.getFrameCounter < 4:
                 self.drawPoint(self.getFrameCounter, frame, grayFrame)
-            cv2.imshow(self.frameName, frame)
-            if cv2.waitKey(20) & 0xFF == 27:
+                cv2.imshow(self.frameName, frame)
+                if cv2.waitKey(20) & 0xFF == 27:
+                    break
+            else:
                 break
+            
         cv2.destroyAllWindows()
 
         p1, p2, p3, p4 = self.getPoints()
         self.setPoints(p1, p2, p3, p4)
 
     def getFrame(self):
-        _, frame = self.cap.read()
-        grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        ret, frame = self.cap.read()
+        if ret:
+            grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Iterate through the points (based on the counter value)
-        for i in range(0, self.counter):
-            self.drawPoint(i+1, frame, grayFrame)
+            # Iterate through the points (based on the counter value)
+            for i in range(0, self.counter):
+                self.drawPoint(i+1, frame, grayFrame)
 
-        return frame
-
-def main():
-    path1 = os.path.join(ROOT, FILENAME1)
-    path2 = os.path.join(ROOT, FILENAME2)
-    vid = Video(path1, "f1")
-    vid.markPoints()
-    while True:
-        frame = vid.getFrame()
-        cv2.imshow("f1", frame)
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
-        cv2.destroyAllWindows()
+        return ret, frame
 
 if __name__ == "__main__":
     main()
