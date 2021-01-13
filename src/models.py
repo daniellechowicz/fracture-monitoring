@@ -6,10 +6,9 @@ Created on Tue Jan 12 09:42:30 2021
 """
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import os
-from threading import Thread
-from time import sleep
 
 # Define static strings containing root and filename.
 # Change these strings to indicate where the videos are.
@@ -196,3 +195,39 @@ class Video:
                 self.drawPoint(i+1, frame, grayFrame)
 
         return ret, frame
+
+class Data:
+
+    def __init__(self, path):
+        self.path = path
+
+    def upload(self):
+        data = np.loadtxt(self.path, delimiter=";")
+        travel = data[:, 0]
+        force = data[:, 1]
+        t = data[:, 2]
+
+        return travel, force, t
+
+    def preview(self, previewTravel=False, previewForce=False):
+        travel, force, t = self.upload()
+        
+        plt.close("all")
+
+        if previewTravel:
+            plt.figure()
+            plt.plot(t, travel, linewidth=0.5, linestyle="--", color="blue")
+            plt.xlabel("Time [s]", fontsize=12)
+            plt.ylabel("Standard travel [mm]", fontsize=12)
+
+        if previewForce:
+            plt.figure()
+            plt.plot(t, force, linewidth=0.5, linestyle="--", color="blue")
+            plt.xlabel("Time [s]", fontsize=12)
+            plt.ylabel("Standard force [N]", fontsize=12)
+
+        plt.show()
+
+if __name__ == "__main__":
+    Data("F:\\02 Work\\07 Babu\\PRF\dev\\fracture-monitoring\\samples\\test.csv").upload()
+

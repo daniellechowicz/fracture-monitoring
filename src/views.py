@@ -1,12 +1,14 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5 import uic
+from pyqtgraph import PlotWidget
 
-from models import Video
+from models import Data, Video
 
 import cv2
 import numpy as np
 import os
 import sys
+import pyqtgraph as pg
 import time
 
 class UserInterface(QtWidgets.QMainWindow):
@@ -26,6 +28,7 @@ class UserInterface(QtWidgets.QMainWindow):
 
         # Buttons' callbacks
         self.pushButton_1.clicked.connect(self.videoPathDialog)
+        self.pushButton_2.clicked.connect(self.importData)
         self.pushButton_3.clicked.connect(self.markPoints)
         self.pushButton_4.clicked.connect(self.reset)
         self.pushButton_5.clicked.connect(self.start)
@@ -35,6 +38,18 @@ class UserInterface(QtWidgets.QMainWindow):
         self.pushButton_4.setEnabled(False)
         self.pushButton_5.setEnabled(False)
         self.pushButton_6.setEnabled(False)
+
+        # Adjust graphs
+        self.setupGraphs()
+
+    def setupGraphs(self):
+        self.graphicsView_1.setBackground("w")
+        self.graphicsView_1.setLabel("left", "<span style=\"color: black; font-size: 12px\">Standard travel [mm]</span>")
+        self.graphicsView_1.setLabel("bottom", "<span style=\"color: black; font-size: 12px\">Time [s]</span>")
+
+        self.graphicsView_2.setBackground("w")
+        self.graphicsView_2.setLabel("left", "<span style=\"color: black; font-size: 12px\">Standard force [N]</span>")
+        self.graphicsView_2.setLabel("bottom", "<span style=\"color: black; font-size: 12px\">Time [s]</span>")
     
     def showMessageBox(self, text, altText=None, dtlText=None):
         msg = QtWidgets.QMessageBox()
@@ -67,8 +82,27 @@ class UserInterface(QtWidgets.QMainWindow):
             self.pushButton_3.setEnabled(True)
             self.pushButton_4.setEnabled(True)
 
-    def importDataPath(self):
-        pass
+    def importData(self, dir=None):
+        if dir is None:
+            dir = "./"
+
+        self.csvDataPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV file path...", str(dir))
+
+        if self.csvDataPath == "":
+            # Show a message box
+            self.showMessageBox(text="Incorrect path was given - please try again")
+        else:
+            # Disable "Import file path" button
+            # Enable "Mark points" and "Reset" buttons
+            self.pushButton_2.setEnabled(False)
+
+            # Data import
+            stdTravel, stdForce, t = Data(self.csvDataPath).upload()
+
+            # Data plot
+            pen = pg.mkPen(color=(255, 0, 0), width=1, style=QtCore.Qt.DashLine)
+            self.graphicsView_1.plot(t, stdTravel, pen=pen)
+            self.graphicsView_2.plot(t, stdForce, pen=pen)
 
     def markPoints(self):
         self.video = Video(self.videoPath, "Initial frame")
