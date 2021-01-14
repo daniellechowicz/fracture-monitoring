@@ -359,19 +359,3 @@ class Data:
             plt.ylabel("Standard force [N]", fontsize=12)
 
         plt.show()
-
-if __name__ == "__main__":
-    cl = CrackLength("F:\\02 Work\\07 Babu\\PRF\\dev\\fracture-monitoring\\samples\\video.mp4")
-    while True:
-        try:
-            ret, frame = cl.getFrame()
-        except:
-            break
-
-        if ret:
-            cv2.imshow('Frame', frame)
-            
-            # Press "Q" on keyboard to exit.
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                break
-    
