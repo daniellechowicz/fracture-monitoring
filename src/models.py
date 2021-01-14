@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+
 class Video:
 
     def __init__(self, path, frameName):
@@ -217,6 +218,7 @@ class Video:
 
         return ret, frame, ts, fps
 
+
 class CrackLength:
 
     def __init__(self, path):
@@ -327,6 +329,7 @@ class CrackLength:
         crackLength = self.findCrack(x, w, y, h, frame, mask)
         
         return ret, frame, crackLength
+
 
 class Data:
 

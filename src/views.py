@@ -9,7 +9,6 @@ from models import CrackLength, Data, Video
 import cv2
 import numpy as np
 import os
-import sys
 import pyqtgraph as pg
 import time
 
@@ -258,9 +257,3 @@ class UserInterface(QtWidgets.QMainWindow):
 
             # Clear displays
             self.clearDisplays()
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    mainWindow = UserInterface()
-    mainWindow.show()
-    sys.exit(app.exec_())
