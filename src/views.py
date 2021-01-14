@@ -17,7 +17,7 @@ class UserInterface(QtWidgets.QMainWindow):
         super().__init__() 
 
         # Import GUI XML layout
-        self.ui = uic.loadUi("layout.ui", self)
+        self.ui = uic.loadUi("layout — kopia.ui", self)
         
         self.setWindowTitle("Fracture Monitoring") 
 
@@ -97,12 +97,13 @@ class UserInterface(QtWidgets.QMainWindow):
             self.pushButton_2.setEnabled(False)
 
             # Data import
-            stdTravel, stdForce, t = Data(self.csvDataPath).upload()
+            self.stdTravel, self.stdForce, self.t = Data(self.csvDataPath).upload()
 
             # Data plot
-            pen = pg.mkPen(color=(255, 0, 0), width=1, style=QtCore.Qt.DashLine)
-            self.graphicsView_1.plot(t, stdTravel, pen=pen)
-            self.graphicsView_2.plot(t, stdForce, pen=pen)
+            pen1 = pg.mkPen(color=(0, 0, 255), width=2, style=QtCore.Qt.SolidLine)
+            pen2 = pg.mkPen(color=(255, 0, 0), width=2, style=QtCore.Qt.SolidLine)
+            self.graphicsView_1.plot(self.t, self.stdTravel, pen=pen1)
+            self.graphicsView_2.plot(self.t, self.stdForce, pen=pen2)
 
     def markPoints(self):
         self.video = Video(self.videoPath, "Initial frame")
@@ -145,7 +146,23 @@ class UserInterface(QtWidgets.QMainWindow):
         self.video.open()
         self.video.setPoints(self.p1, self.p2, self.p3, self.p4)
         while True:
-            ret, frame = self.video.getFrame()
+            ret, frame, ts, _ = self.video.getFrame(timestamp=True)
+            
+            # Get points' coordinates
+            p1, p2, p3, p4 = self.video.getOldPoints()
+
+            # Update LCD displays (coordinates are numpy arrays)
+            # Since these are numpy arrays, add [0]
+            self.p1x.display(p1[0][0]); self.p1y.display(p1[0][1])
+            self.p2x.display(p2[0][0]); self.p2y.display(p2[0][1])
+            self.p3x.display(p3[0][0]); self.p3y.display(p3[0][1])
+            self.p4x.display(p4[0][0]); self.p4y.display(p4[0][1])
+
+            # Update progress bar
+            progress = int(100*ts/max(self.t))
+            if self.progressBar.value() is not progress:
+                self.progressBar.setValue(progress)
+
             if ret:
                 cv2.imshow("f1", frame)
                 key = cv2.waitKey(1)

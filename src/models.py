@@ -54,6 +54,9 @@ class Video:
         else:
             return self.point1, self.point2, self.point3, self.point4
 
+    def getOldPoints(self):
+        return self.oldPoints1, self.oldPoints2, self.oldPoints3, self.oldPoints4
+
     def setPoints(self, p1, p2, p3, p4):
         self.point1 = p1
         self.point2 = p2
@@ -185,7 +188,31 @@ class Video:
             p1, p2, p3, p4 = self.getPoints()
             self.setPoints(p1, p2, p3, p4)
 
-    def getFrame(self):
+    def getFrameTimestamp(self):
+        # Number of frames of the video
+        frameCount = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        # Find OpenCV version and get the FPS value of the video.
+        (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+        if int(major_ver) < 3:
+            fps = self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        else:
+            fps = self.cap.get(cv2.CAP_PROP_FPS)
+            
+        # Get:
+        # - current timestamp, 
+        # - current frame, 
+        # - video's duration,
+        # - progress done,
+        # respectively.
+        ts = self.cap.get(cv2.CAP_PROP_POS_MSEC)/1000 # [s]
+        currentFrame = ts*fps/1000
+        duration = frameCount/fps
+        progress = ts*0.1/duration
+
+        return ts, fps
+        
+    def getFrame(self, timestamp=False):
         ret, frame = self.cap.read()
         if ret:
             grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -194,7 +221,12 @@ class Video:
             for i in range(0, self.counter):
                 self.drawPoint(i+1, frame, grayFrame)
 
-        return ret, frame
+            if timestamp:
+                ts, fps = self.getFrameTimestamp()
+            else:
+                ts, fps = None, None
+
+        return ret, frame, ts, fps
 
 class Data:
 
