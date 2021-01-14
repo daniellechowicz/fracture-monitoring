@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5 import uic
 from pyqtgraph import PlotWidget

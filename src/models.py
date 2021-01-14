@@ -1,20 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 12 09:42:30 2021
-
-@author: Daniel Lechowicz
-"""
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
-# Define static strings containing root and filename.
-# Change these strings to indicate where the videos are.
-ROOT = "F:\\02 Work\\07 Babu\\PRF\\Videos\\PRF0.1"
-FILENAME1 = "testVideo1.mp4"
-FILENAME2 = "testVideo2.mp4"
 
 class Video:
 
