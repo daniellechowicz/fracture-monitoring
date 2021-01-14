@@ -228,6 +228,117 @@ class Video:
 
         return ret, frame, ts, fps
 
+class CrackLength:
+
+    def __init__(self, path):
+        # Video path
+        self.path = path
+
+        # Workpiece dimensions [mm]
+        self.length = 200
+        self.incisionLength = 30
+        
+        # Instead of global variables
+        self.widths = []
+        self.area = []
+        
+        # Open video capture
+        self.open()
+
+    def open(self):
+        self.cap = cv2.VideoCapture(self.path)
+
+    def transformImage(self, frame):
+        # Change to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+        
+        # Perform Otsu's thresholding after Gaussian filtering
+        kernel = (3, 3)
+        blur = cv2.GaussianBlur(gray, kernel, 0)
+        _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        return frame, th
+
+    def getCrackLength(self, crackTip, leftEdge, rightEdge):
+        length = rightEdge - leftEdge
+        incisionLength = length * (self.incisionLength/self.length)
+        crackLength = length - incisionLength - (rightEdge-crackTip)
+        
+        # Convert to [mm]
+        crackLength = (crackLength/length) * self.length
+
+        return crackLength
+
+    def findCrack(self, x, w, y, h, frame, mask):        
+        # Loop column by column, but only within coordinates 
+        # obtained by means of "findContours" function
+        for i in range(x, x+w):
+            container = []
+            indices = []
+            scores = []
+            
+            # The task of the following lines is to scan the column row by row 
+            # and then add 1 to the vector "container" when the value of an individual pixel 
+            # is equal to "0" (which corresponds to white). Otherwise, the "container" is reset. 
+            # The motivation behind this idea was to find the longest possible sequence of white color, 
+            # which in most of the cases indicates searched crack.
+            for j in range(int(y+0.25*h), int(y+h-0.25*h)):
+                if mask[j, i] == 0:
+                    container.append(1)
+                    score = sum(container)
+                    scores.append(score)
+                    indices.append(j)
+                else:
+                    container = []
+    
+            try:
+                where = scores.index(max(scores))
+                start = indices[where] - scores[where]
+                stop = indices[where]
+
+                # Draw lines (crack)    
+                cv2.line(frame, (i, start), (i, stop), (0, 255, 0), 1)
+                
+            except:
+                # If no lines were present, stop the process
+                # This means that the tip of the crack was found
+                break
+                    
+        return self.getCrackLength(i, x, x+w)
+        
+    def findContours(self, frame, mask):
+        if (int(cv2.__version__[0]) > 3):
+            contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        else:
+            im2, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    
+        if len(contours) != 0:
+            # Find the biggest countour (c) by the area
+            c = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(c)
+    
+            # Draw the biggest area only
+            cv2.drawContours(frame, c, -1, (0, 255, 255), 1)
+    
+            # Describe the largest contour with a rectangle
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1)
+        
+        return x, y, w, h
+
+    def getFrame(self):
+        ret, frame = self.cap.read()
+
+        # Perform necessary transformations (scroll up to see the function)
+        frame, mask = self.transformImage(frame)
+        
+        # Find contours
+        x, y, w, h = self.findContours(frame, mask)
+
+        # Find crack and get its value
+        crackLength = self.findCrack(x, w, y, h, frame, mask)
+        
+        return ret, frame, crackLength
+
 class Data:
 
     def __init__(self, path):
@@ -261,5 +372,17 @@ class Data:
         plt.show()
 
 if __name__ == "__main__":
-    Data("F:\\02 Work\\07 Babu\\PRF\dev\\fracture-monitoring\\samples\\test.csv").upload()
+    cl = CrackLength("F:\\02 Work\\07 Babu\\PRF\\dev\\fracture-monitoring\\samples\\video.mp4")
+    while True:
+        try:
+            ret, frame = cl.getFrame()
+        except:
+            break
 
+        if ret:
+            cv2.imshow('Frame', frame)
+            
+            # Press "Q" on keyboard to exit.
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+    

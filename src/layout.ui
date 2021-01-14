@@ -139,7 +139,7 @@
              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
-             <string>Press the &quot;Import video path&quot; button to indicate the path. Then, press the &quot;Import frames&quot; button to import the first frame of the recording. When the frames are imported, mark the points that will be tracked. When ready, press &quot;Start&quot;. Press &quot;Reset&quot; to clear the points or &quot;Stop&quot; to break the execution of the program.</string>
+             <string>Press the &quot;Import CSV file path&quot; button to indicate the path of the data file. When the frames and the file are imported, mark the points that will be tracked. When ready, press &quot;Start&quot;. Press &quot;Reset&quot; to clear the points or &quot;Stop&quot; to break the execution of the program.</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignJustify|Qt::AlignVCenter</set>
@@ -164,7 +164,7 @@
           <item row="1" column="3">
            <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>Crack length&lt;br&gt;[px]</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Crack length&lt;br/&gt;[mm]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

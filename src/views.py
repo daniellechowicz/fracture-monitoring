@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5 import uic
 from pyqtgraph import PlotWidget
 
-from models import Data, Video
+from models import CrackLength, Data, Video
 
 import cv2
 import numpy as np
@@ -137,6 +137,12 @@ class UserInterface(QtWidgets.QMainWindow):
                                                                 self.p2, 
                                                                 self.p3, 
                                                                 self.p4))
+
+            # Update LCD displays
+            self.p1x.display(self.p1[0]); self.p1y.display(self.p1[1])
+            self.p2x.display(self.p2[0]); self.p2y.display(self.p2[1])
+            self.p3x.display(self.p3[0]); self.p3y.display(self.p3[1])
+            self.p4x.display(self.p4[0]); self.p4y.display(self.p4[1])
             
     def reset(self):
         # Disable "Import CSV file path", "Mark points", "Reset", "Start" and "Stop" buttons
@@ -176,7 +182,12 @@ class UserInterface(QtWidgets.QMainWindow):
         self.p4x.display(0); self.p4y.display(0)
 
     def start(self):
+        # Initialize "CrackLength" object
+        self.crackLength = CrackLength(self.videoPath)
+        
+        # Disable "Reset" button
         # Enable "Stop" button
+        self.pushButton_4.setEnabled(False)
         self.pushButton_6.setEnabled(True)
         
         # If stop button was ever pressed,
@@ -194,10 +205,11 @@ class UserInterface(QtWidgets.QMainWindow):
             # when video is finished (no frame will be imported)
             try:
                 ret, frame, ts, _ = self.video.getFrame(timestamp=True)
+                ret_, frame_, crackLength = self.crackLength.getFrame()
             except:
                 break
 
-            if ret:
+            if ret and ret_:
                 # Get points' coordinates
                 p1, p2, p3, p4 = self.video.getOldPoints()
 
@@ -212,7 +224,7 @@ class UserInterface(QtWidgets.QMainWindow):
                 self.lcdNumber_1.display("%.2f" % (self.t[frameCounter]))
                 self.lcdNumber_2.display("%.2f" % (self.stdTravel[frameCounter]))
                 self.lcdNumber_3.display("%.1f" % (self.stdForce[frameCounter]))
-                # self.lcdNumber_4.display(round(ts, 3))
+                self.lcdNumber_4.display("%.1f" % (crackLength))
 
                 # Update progress bar
                 progress = int(100*self.t[frameCounter]/self.t[-1])
@@ -222,6 +234,7 @@ class UserInterface(QtWidgets.QMainWindow):
                 frameCounter += 1
 
                 cv2.imshow("f1", frame)
+                cv2.imshow("f2", frame_)
                 key = cv2.waitKey(1)
                 if key == 27 or self.stop == True:
                     break
@@ -233,7 +246,9 @@ class UserInterface(QtWidgets.QMainWindow):
         if buttonReply == QtWidgets.QMessageBox.Yes:
             self.stop = True
 
+            # Enable "Reset" button
             # Disable "Stop" button
+            self.pushButton_4.setEnabled(True)
             self.pushButton_6.setEnabled(False)
 
             # Close frame
