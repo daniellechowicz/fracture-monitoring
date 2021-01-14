@@ -17,7 +17,7 @@ class UserInterface(QtWidgets.QMainWindow):
         super().__init__() 
 
         # Import GUI XML layout
-        self.ui = uic.loadUi("layout — kopia.ui", self)
+        self.ui = uic.loadUi("layout.ui", self)
         
         self.setWindowTitle("Fracture Monitoring") 
 
@@ -32,8 +32,10 @@ class UserInterface(QtWidgets.QMainWindow):
         self.pushButton_3.clicked.connect(self.markPoints)
         self.pushButton_4.clicked.connect(self.reset)
         self.pushButton_5.clicked.connect(self.start)
+        self.pushButton_6.clicked.connect(self.stop)
 
-        # Disable "Mark points", "Reset", "Start" and "Stop" buttons
+        # Disable "Import CSV file path", "Mark points", "Reset", "Start" and "Stop" buttons
+        self.pushButton_2.setEnabled(False)
         self.pushButton_3.setEnabled(False)
         self.pushButton_4.setEnabled(False)
         self.pushButton_5.setEnabled(False)
@@ -41,6 +43,12 @@ class UserInterface(QtWidgets.QMainWindow):
 
         # Adjust graphs
         self.setupGraphs()
+
+        # Clear LCD displays
+        self.clearDisplays()
+
+        # Set progress bar's value to 0
+        self.progressBar.setValue(0)
 
     def setupGraphs(self):
         self.graphicsView_1.setBackground("w")
@@ -72,14 +80,14 @@ class UserInterface(QtWidgets.QMainWindow):
 
         self.videoPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import video path...", str(dir))
 
-        if self.videoPath == "":
+        if self.videoPath == "" or self.videoPath.endswith((".mp4", ".MP4")) is False:
             # Show a message box
             self.showMessageBox(text="Incorrect path was given - please try again")
         else:
             # Disable "Import video path" button
-            # Enable "Mark points" and "Reset" buttons
+            # Enable "Reset" button
             self.pushButton_1.setEnabled(False)
-            self.pushButton_3.setEnabled(True)
+            self.pushButton_2.setEnabled(True)
             self.pushButton_4.setEnabled(True)
 
     def importData(self, dir=None):
@@ -88,13 +96,14 @@ class UserInterface(QtWidgets.QMainWindow):
 
         self.csvDataPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV file path...", str(dir))
 
-        if self.csvDataPath == "":
+        if self.csvDataPath == "" or self.csvDataPath.endswith((".csv", ".CSV", ".txt", ".TXT")) is False:
             # Show a message box
             self.showMessageBox(text="Incorrect path was given - please try again")
         else:
             # Disable "Import file path" button
-            # Enable "Mark points" and "Reset" buttons
+            # Enable "Mark points" button
             self.pushButton_2.setEnabled(False)
+            self.pushButton_3.setEnabled(True)
 
             # Data import
             self.stdTravel, self.stdForce, self.t = Data(self.csvDataPath).upload()
@@ -130,46 +139,108 @@ class UserInterface(QtWidgets.QMainWindow):
                                                                 self.p4))
             
     def reset(self):
-        # Disable "Mark points", "Reset", "Start" and "Stop" buttons
+        # Disable "Import CSV file path", "Mark points", "Reset", "Start" and "Stop" buttons
         # Enable "Import video path" button
         self.pushButton_1.setEnabled(True)
-        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setEnabled(False)
         self.pushButton_3.setEnabled(False)
         self.pushButton_4.setEnabled(False)
         self.pushButton_5.setEnabled(False)
         self.pushButton_6.setEnabled(False)
         
         # Clear video's path
+        # Clear CSV file path
         self.videoPath = ""
+        self.csvDataPath = ""
+
+        # Reset "Stop" button
+        self.stop = False
+
+        # Clear LCD displays
+        self.clearDisplays()
+
+        # Clear progress bar
+        self.progressBar.setValue(0)
+
+        # Close all videos if there are any
+        cv2.destroyAllWindows()
+
+    def clearDisplays(self):
+        self.lcdNumber_1.display("%.2f" % (0))
+        self.lcdNumber_2.display("%.2f" % (0))
+        self.lcdNumber_3.display("%.1f" % (0))
+        self.lcdNumber_4.display("%.1f" % (0))
+        self.p1x.display(0); self.p1y.display(0)
+        self.p2x.display(0); self.p2y.display(0)
+        self.p3x.display(0); self.p3y.display(0)
+        self.p4x.display(0); self.p4y.display(0)
 
     def start(self):
+        # Enable "Stop" button
+        self.pushButton_6.setEnabled(True)
+        
+        # If stop button was ever pressed,
+        # change its state
+        self.stop = False
+
         self.video.open()
         self.video.setPoints(self.p1, self.p2, self.p3, self.p4)
+        
+        # To synchronize data with video
+        frameCounter = 0
+
         while True:
-            ret, frame, ts, _ = self.video.getFrame(timestamp=True)
-            
-            # Get points' coordinates
-            p1, p2, p3, p4 = self.video.getOldPoints()
-
-            # Update LCD displays (coordinates are numpy arrays)
-            # Since these are numpy arrays, add [0]
-            self.p1x.display(p1[0][0]); self.p1y.display(p1[0][1])
-            self.p2x.display(p2[0][0]); self.p2y.display(p2[0][1])
-            self.p3x.display(p3[0][0]); self.p3y.display(p3[0][1])
-            self.p4x.display(p4[0][0]); self.p4y.display(p4[0][1])
-
-            # Update progress bar
-            progress = int(100*ts/max(self.t))
-            if self.progressBar.value() is not progress:
-                self.progressBar.setValue(progress)
+            # Exception handling in order to prevent errors
+            # when video is finished (no frame will be imported)
+            try:
+                ret, frame, ts, _ = self.video.getFrame(timestamp=True)
+            except:
+                break
 
             if ret:
+                # Get points' coordinates
+                p1, p2, p3, p4 = self.video.getOldPoints()
+
+                # Update LCD displays (coordinates are numpy arrays)
+                # Since these are numpy arrays, add [0]
+                self.p1x.display(p1[0][0]); self.p1y.display(p1[0][1])
+                self.p2x.display(p2[0][0]); self.p2y.display(p2[0][1])
+                self.p3x.display(p3[0][0]); self.p3y.display(p3[0][1])
+                self.p4x.display(p4[0][0]); self.p4y.display(p4[0][1])
+
+                # Update process info
+                self.lcdNumber_1.display("%.2f" % (self.t[frameCounter]))
+                self.lcdNumber_2.display("%.2f" % (self.stdTravel[frameCounter]))
+                self.lcdNumber_3.display("%.1f" % (self.stdForce[frameCounter]))
+                # self.lcdNumber_4.display(round(ts, 3))
+
+                # Update progress bar
+                progress = int(100*self.t[frameCounter]/self.t[-1])
+                if self.progressBar.value() is not progress:
+                    self.progressBar.setValue(progress)
+
+                frameCounter += 1
+
                 cv2.imshow("f1", frame)
                 key = cv2.waitKey(1)
-                if key == 27:
+                if key == 27 or self.stop == True:
                     break
             else:
                 break
+
+    def stop(self):
+        buttonReply = QtWidgets.QMessageBox.question(self, "Fracture Monitoring", "Do you really want to stop the analysis?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if buttonReply == QtWidgets.QMessageBox.Yes:
+            self.stop = True
+
+            # Disable "Stop" button
+            self.pushButton_6.setEnabled(False)
+
+            # Close frame
+            cv2.destroyAllWindows()
+
+            # Clear displays
+            self.clearDisplays()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
