@@ -21,7 +21,7 @@
 </p>
 
 4. Clone or download the content of the repository
-5. Extract **hardis-master.zip** and open the folder
+5. Extract **fracture-monitoring-master.zip** and open the folder
 6. Open the command prompt in the folder you extracted and execute the following commands, respectively:
 
 ```
@@ -44,13 +44,9 @@ pip install -r requirements.txt
 9. If the above steps have been correctly performed, the software is ready to use
 
 ## How to use the software?
-1. Open the command prompt in the folder you extracted and execute the following command to get the instructions:
+1. Open the command prompt in the folder you extracted and execute the following command to run the application:
 ```
-python run.py --help
-```
-2. The following example illustrates how the software can be used:
-```
-python run.py -p "your\absolute\folder\path" -ch 2 -fs 100000
+python app.py
 ```
 
 ## Issues related to data acquisition and file format
