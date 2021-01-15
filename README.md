@@ -1,4 +1,4 @@
-# fracture monitoring
+# Fracture Monitoring
  A script that analyzes crack length based on frames obtained during a tensile test
 
 ## How to set up the software?
