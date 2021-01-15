@@ -5,19 +5,19 @@
 1. Go to https://www.python.org/ftp/python/3.7.0/python-3.7.0-amd64.exe
 
 <p align="center"> 
-<img src="https://github.com/daniellechowicz/hardis/blob/master/1.PNG">
+<img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/setup/1.png">
 </p>
 
 2. Install the downloaded file (which is a Python interpreter) and make sure **Add Python 3.7 to PATH** is checked
 
 <p align="center"> 
-<img src="https://github.com/daniellechowicz/hardis/blob/master/2.PNG">
+<img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/setup/2.png">
 </p>
 
 3. When the installation is complete, press **Close**
 
 <p align="center"> 
-<img src="https://github.com/daniellechowicz/hardis/blob/master/6.PNG">
+<img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/setup/3.png">
 </p>
 
 4. Clone or download the content of the repository
