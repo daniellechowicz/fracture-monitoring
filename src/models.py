@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import cv2
+import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -362,3 +363,40 @@ class Data:
             plt.ylabel("Standard force [N]", fontsize=12)
 
         plt.show()
+
+
+class DataWriter:
+
+    def __init__(self, root):
+        self.root = root
+        self.now = datetime.datetime.now().strftime("%d-%m-%Y")
+        self.filename = "Fracture Monitoring " + self.now + ".csv"  
+        if self.checkIfExists(self.filename):
+            self.setAlternativeFilename()
+
+    def checkIfExists(self, filename):
+        found = False
+        for filename_ in os.listdir(self.root):
+            if filename_ == filename:
+                found = True
+        return found
+
+    def setAlternativeFilename(self):
+        exists = True
+        counter = 1
+        while exists:
+            alternativeFilename = self.filename[:-4] + " V" + str(counter) + ".csv"
+            counter += 1
+            if not self.checkIfExists(alternativeFilename):
+                exists = False
+        self.filename = alternativeFilename 
+
+    def writeLine(self, arr):
+        filePath = os.path.join(self.root, self.filename)
+        file = open(filePath, "a")
+        for i, d in enumerate(arr):
+            if i+1 == len(arr):
+                file.write("{}\n".format(d))
+            else:
+                file.write("{};".format(d))
+        file.close()

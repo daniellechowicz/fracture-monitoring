@@ -4,7 +4,10 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5 import uic
 from pyqtgraph import PlotWidget
 
-from models import CrackLength, Data, Video
+from models import CrackLength
+from models import Data
+from models import DataWriter
+from models import Video
 
 import cv2
 import numpy as np
@@ -169,6 +172,10 @@ class UserInterface(QtWidgets.QMainWindow):
         # Clear progress bar
         self.progressBar.setValue(0)
 
+        # Clear graphics view objects
+        self.graphicsView_1.clear()
+        self.graphicsView_2.clear()
+
         # Close all videos if there are any
         cv2.destroyAllWindows()
 
@@ -198,6 +205,21 @@ class UserInterface(QtWidgets.QMainWindow):
         self.video.open()
         self.video.setPoints(self.p1, self.p2, self.p3, self.p4)
         
+        # Save to file - initialize "DataWriter" object and write headers
+        dataWriter = DataWriter(os.path.dirname(self.csvDataPath))
+        dataWriter.writeLine(["time", 
+                              "standard_travel", 
+                              "standard_force",
+                              "crack_length",
+                              "p1_x",
+                              "p1_y",
+                              "p2_x",
+                              "p2_y",
+                              "p3_x",
+                              "p3_y",
+                              "p4_x",
+                              "p4_y"])
+
         # To synchronize data with video
         frameCounter = 0
 
@@ -226,6 +248,20 @@ class UserInterface(QtWidgets.QMainWindow):
                 self.lcdNumber_2.display("%.2f" % (self.stdTravel[frameCounter]))
                 self.lcdNumber_3.display("%.1f" % (self.stdForce[frameCounter]))
                 self.lcdNumber_4.display("%.1f" % (crackLength))
+
+                # Save to CSV file
+                dataWriter.writeLine([self.t[frameCounter], 
+                                     self.stdTravel[frameCounter], 
+                                     self.stdForce[frameCounter],
+                                     crackLength,
+                                     p1[0][0],
+                                     p1[0][1],
+                                     p2[0][0],
+                                     p2[0][1],
+                                     p3[0][0],
+                                     p3[0][1],
+                                     p4[0][0],
+                                     p4[0][1]]) 
 
                 # Update progress bar
                 progress = int(100*self.t[frameCounter]/self.t[-1])
