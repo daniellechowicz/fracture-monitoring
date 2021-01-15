@@ -4,6 +4,10 @@ A script that analyzes crack length and its rotation based on frames obtained du
 <img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/workpieceGeometry.png">
 </p>
 
+<p align="center"> 
+<img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/screenshots/7.png">
+</p>
+
 ## How to set up the software?
 1. Go to https://www.python.org/ftp/python/3.7.0/python-3.7.0-amd64.exe
 
@@ -52,13 +56,7 @@ pip install -r requirements.txt
 python app.py
 ```
 2. Then, the following window should pop up:
+
 <p align="center"> 
 <img src="https://github.com/daniellechowicz/fracture-monitoring/blob/main/assets/screenshots/1.png">
 </p>
-
-## Issues related to data acquisition and file format
-1. As the modal tests were performed at a sampling rate of 100 000 Hz, the sampling rate of the measurement files must be the same (i.e. 100 000 Hz)
-2. The format of the measurement files must be **.txt**
-3. Columns must be separated with semicolons
-4. Nor headers neither comments are allowed
-5. Before running the software, you need to specify channel corresponding to Y axis (remember that the numbering in Python starts with 0)
